@@ -24,6 +24,7 @@ export default function MembersPage() {
     { name: 'Uncle Dan', src: '/pfps/uncle dan.png', x: 'https://x.com/UncleDan1977' },
     { name: 'Butter', src: '/pfps/butter.png', x: 'https://x.com/buttermetax' },
     { name: 'Max', src: '/pfps/max.png', x: 'https://x.com/maxgigs' },
+    { name: 'Nose', src: '/pfps/nose.png', x: 'https://x.com/Nose_Toes9' },
    ];
 
   return (
