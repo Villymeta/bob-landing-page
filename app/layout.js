@@ -3,7 +3,7 @@
 import './globals.css';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
-import Providers from './providers';
+import Providers from './Providers';
 
 export const metadata = {
   title: 'Beanies On Business',
