@@ -7,7 +7,6 @@ export default function MembersPage() {
     { name: 'Broh', src: '/pfps/broh.png', x: 'https://x.com/brohmetax' },
     { name: 'Papas', src: '/pfps/papas.png', x: 'https://x.com/papasxmeta' },
     { name: 'Nero', src: '/pfps/nero.png', x: 'https://x.com/nerometax' },
-    { name: 'G', src: '/pfps/g.png', x: 'https://x.com/georgexmeta' },
     { name: 'Rip', src: '/pfps/rip.png', x: 'https://x.com/ripmeta_x' },
     { name: 'Machine', src: '/pfps/machine.png', x: 'https://x.com/machinemetax' },
     { name: 'Frost', src: '/pfps/frost.png', x: 'https://x.com/frostymeta' },
