@@ -29,7 +29,7 @@ export default function MembersPage() {
   return (
     <main className="min-h-screen bg-black px-4 py-12 text-center text-white">
       <h1 className="text-4xl md:text-5xl font-bold mb-4">B.O.B Members</h1>
-      <h2 className="text-2xl md:text-3xl font-semibold text-gray-200 mb-2">Meet the Beanies</h2>
+      <h2 className="text-2xl md:text-3xl font-semibold text-gray-200 mb-2">Meet the Beanie DAO</h2>
       <p className="text-md md:text-xl lg:text-2xl text-gray-400 mb-10">
         Our founding members building the future together.
       </p>
