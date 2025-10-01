@@ -4,7 +4,7 @@ const members = [
   {
     name: "Broh",
     src: "/pfps/broh.png",
-    bio: "Beanies On Business Founder. DAO Member. Builder.",
+    bio: "Founder of Beanies On Business. Visionary and community builder dedicated to growing the Beanie brand and driving",
     socials: {
       x: "https://x.com/brohmetax",
       instagram: "https://instagram.com/broh",
@@ -17,7 +17,7 @@ const members = [
   {
     name: "Nero",
     src: "/pfps/nero.png",
-    bio: "| Marketer for Crypto, NFT & Memecoins |",
+    bio: "Marketer for Crypto, NFT & Memecoins |",
     socials: {
       x: "https://x.com/nerometax",
       instagram: "https://www.instagram.com/nerometax/?igsh=MThidHpjczNqcW5hOQ%3D%3D",
@@ -30,20 +30,20 @@ const members = [
   {
     name: "Machine",
     src: "/pfps/machine.png",
-    bio: "Community Builder | Entrepreneur | Marketing & Sales ",
+    bio: "Crypto, NFT & Stocks Investor | Entrepreneur | Community Builder | Marketing & Sales Specialist | Nonprofit Director",
     socials: {
       x: "https://x.com/machinemetax",
       instagram: "",
       website: "",
-      reddit: "",
+      reddit: "https://www.reddit.com/u/Machinemetax/s/8AdSE1aZUn",
       medium: "",
-      quora: "",
+      quora: "https://www.quora.com/profile/Machinemetax?ch=17&oid=3098443493&share=f6806cbd&srid=5TBfXG&target_type=user",
     },
   },
   {
     name: "Sauce",
     src: "/pfps/sauce.png",
-    bio: "The plug 🔌",
+    bio: "Marketing Strategist, Community Builder & Fashion Designer",
     socials: {
       x: "https://x.com/crypto_sauce",
       instagram: "https://www.instagram.com/sauceonx?igsh=NTc4MTIwNjQ2YQ%3D%3D&utm_source=qr",
@@ -56,7 +56,7 @@ const members = [
   {
     name: "Frost",
     src: "/pfps/frost.png",
-    bio: "Short bio for Frost goes here.",
+    bio: "Crypto Maxi || Marketing Expert || Community builder || Stay Frosty",
     socials: {
       x: "https://x.com/frostymeta",
       instagram: "",
@@ -69,7 +69,7 @@ const members = [
   {
     name: "Bones",
     src: "/pfps/bones.png",
-    bio: "Short bio for Bones goes here.",
+    bio: "Venture Capitalist",
     socials: {
       x: "https://x.com/bonesXventures",
       instagram: "https://www.instagram.com/bonesxventures?igsh=YnJlYW5jcXhjODli&utm_source=qr",
@@ -95,7 +95,7 @@ const members = [
   {
     name: "Rip",
     src: "/pfps/rip.png",
-    bio: "Short bio for Rip goes here.",
+    bio: "Entrepreneur | Crypto Investor for 8 years | Community builder |Future Billionaire",
     socials: {
       x: "https://x.com/ripmeta_x",
       instagram: "https://www.instagram.com/millionairemastermind?igsh=MXUxNDJsbXBtM2xzdw%3D%3D&utm_source=qr",
@@ -121,7 +121,7 @@ const members = [
   {
     name: "Cinco",
     src: "/pfps/cinco.png",
-    bio: "Hustle or Starve ",
+    bio: "Beanies on Business (BOB),contributing to growth, branding, and community culture.",
     socials: {
       x: "https://x.com/CincoXmeta",
       instagram: "",
@@ -147,7 +147,7 @@ const members = [
   {
     name: "VW",
     src: "/pfps/vw.png",
-    bio: "Multi chain money maxi|Digital art|Content creator ",
+    bio: "Business consultant — Multi chain money maxi — Digital artist — Content creator ",
     socials: {
       x: "https://x.com/VW_metaX",
       instagram: "https://www.instagram.com/vw_metax/",
@@ -160,7 +160,7 @@ const members = [
   {
     name: "Vip",
     src: "/pfps/vip.png",
-    bio: "Short bio for Vip goes here.",
+    bio: "Entrepreneur",
     socials: {
       x: "https://x.com/VIP3877",
       instagram: "",
@@ -173,7 +173,7 @@ const members = [
   {
     name: "Tex",
     src: "/pfps/tex.png",
-    bio: "I enjoy helping newcomers learn crypto and supporting projects from other real builders.  I'm a Husband, Father, Dev, Liquidity Guy, & Doginal Dog.  I also advise ethical dev teams, especially about liquidity.",
+    bio: "Husband, Father, Dev, Liquidity Guy & Doginal Dog. I support newcomers, real builders, and advise ethical teams on liquidity.",
     socials: {
       x: "https://x.com/TEXcryptoMeta",
       instagram: "https://www.instagram.com/tex_crypto_meta?igsh=MXNuaGplbWdiYmR3NA%3D%3D&utm_source=qr",
@@ -186,7 +186,7 @@ const members = [
   {
     name: "Papas",
     src: "/pfps/papas.png",
-    bio: "Short bio for Papas goes here.",
+    bio: "Crypto aficionado  • NFT collector  🏴‍☠️ doginaldogsx 🐾 Asset management • DM for partnerships 💥 beanieDaoX| VisorDAOx | YellowDAOx",
     socials: {
       x: "https://x.com/papasxmeta",
       instagram: "",
@@ -199,11 +199,12 @@ const members = [
   {
     name: "Uncle Dan",
     src: "/pfps/uncle-dan.png",
-    bio: "Short bio for Uncle Dan goes here.",
+    bio: "Business Owner | Veteran | Building in Construction and Crypto",
     socials: {
       x: "https://x.com/UncleDan1977",
+      Facebook: "https://www.facebook.com/dan.priotti",
       instagram: "",
-      website: "",
+      website: "http://www.aguaconstruction.com/",
       reddit: "",
       medium: "",
       quora: "",
@@ -212,7 +213,7 @@ const members = [
   {
     name: "Butter",
     src: "/pfps/butter.png",
-    bio: "Community Builder- Beanie Dao Member Core Contributor Product & Promotion  Money Maxi",
+    bio: "Community Builder and Core Contributor, excelling in Product & Promotion to drive growth and engagement.",
     socials: {
       x: "https://x.com/buttermetax",
       instagram: "",
@@ -225,12 +226,12 @@ const members = [
   {
     name: "Nose",
     src: "/pfps/nose.png",
-    bio: "Short bio for Nose goes here.",
+    bio: "Owner of Wood Shark Co. Entrepreneur blending crypto, NFTs, and music — focused on creativity, innovation, and the future. ",
     socials: {
       x: "https://x.com/Nose_Toes9",
-      instagram: "",
-      website: "",
-      reddit: "",
+      instagram: "https://www.instagram.com/nose_toes9?igsh=MXF3b2Q0c3pjemxiNw%3D%3D&utm_source=qr",
+      website: "http://www.nosetoes.xyz",
+      reddit: "https://www.reddit.com/u/Far_Staff_1102/s/W4w2bc6kVS",
       medium: "",
       quora: "",
     },
@@ -238,7 +239,7 @@ const members = [
   {
     name: "Pac",
     src: "/pfps/pac.png",
-    bio: "Short bio for Pac goes here.",
+    bio: "Praise GOD | Community Building | Future visionary | Creator |▪️💎🙌🏾 | Beanie DAO enforcer ",
     socials: {
       x: "https://x.com/PacmetaX",
       instagram: "",
