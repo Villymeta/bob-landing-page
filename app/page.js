@@ -134,7 +134,7 @@ export default function Home() {
   className="bg-white/5 backdrop-blur-md p-6 rounded-2xl shadow-lg"
 >
   <Image
-    src="/cryptospaces.gif"
+    src="/Cryptospaces.gif"
     alt="CryptoSpaces Network"
     width={400}
     height={200}
