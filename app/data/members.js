@@ -134,7 +134,7 @@ const members = [
   {
     name: "Javi",
     src: "/pfps/javi.png",
-    bio: "Short bio for Javi goes here.",
+    bio: "Space Host @ 9pm ET | Type Artist | Marketing",
     socials: {
       x: "https://x.com/javiMetax",
       instagram: "",
