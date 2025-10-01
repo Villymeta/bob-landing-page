@@ -7,10 +7,11 @@ import {
   FaMedium,
 } from 'react-icons/fa';
 import { HiOutlineX, HiChevronLeft, HiChevronRight } from 'react-icons/hi';
-import { FaXTwitter } from 'react-icons/fa6'; // ✅ Correct X icon
-import { SiQuora } from 'react-icons/si'; // ✅ Quora icon
+import { FaXTwitter } from 'react-icons/fa6'; // Correct X icon
+import { SiQuora } from 'react-icons/si'; // Quora icon
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect } from 'react';
+import { FaFacebook } from 'react-icons/fa';
 
 export default function MemberModal({ member, onClose, onNext, onPrev }) {
   if (!member) return null;
@@ -21,10 +22,11 @@ export default function MemberModal({ member, onClose, onNext, onPrev }) {
     { icon: <FaGlobe />, url: member.socials?.website },
     { icon: <FaReddit />, url: member.socials?.reddit },
     { icon: <FaMedium />, url: member.socials?.medium },
-    { icon: <SiQuora />, url: member.socials?.quora }, // ✅ Quora
+    { icon: <SiQuora />, url: member.socials?.quora },
+    { icon: <FaFacebook />, url: member.socials?.facebook },
   ];
 
-  // ✅ Keyboard controls
+  // Keyboard controls
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose();
@@ -51,7 +53,7 @@ export default function MemberModal({ member, onClose, onNext, onPrev }) {
               w-full max-w-md md:max-w-2xl 
               p-6 sm:p-8 
               rounded-t-2xl md:rounded-2xl
-              h-[500px] md:h-[550px]   /* ✅ fixed modal height */
+              h-[500px] md:h-[550px]   /* fixed modal height */
               overflow-y-auto
             "
             initial={{ y: 50, opacity: 0 }}
