@@ -47,16 +47,18 @@ export default function NavBar() {
         {/* Right Side */}
         <div className="flex items-center space-x-4 relative">
           {/* Cluster Badge */}
-          <button
-            onClick={toggleCluster}
-            className={`px-3 py-1 rounded-full text-sm font-semibold ${
-              cluster === "devnet"
-                ? "bg-purple-600 text-white"
-                : "bg-green-600 text-white"
-            }`}
-          >
-            {cluster === "devnet" ? "Devnet" : "Mainnet"}
-          </button>
+     {process.env.NODE_ENV !== "production" && (
+  <button
+    onClick={toggleCluster}
+    className={`px-3 py-1 rounded-full text-sm font-semibold ${
+      cluster === "devnet"
+        ? "bg-purple-600 text-white"
+        : "bg-green-600 text-white"
+    }`}
+  >
+    {cluster === "devnet" ? "Devnet" : "Mainnet"}
+  </button>
+)}
 
           {/* Cart Button */}
           <button
