@@ -15,7 +15,7 @@ export default function Page() {
   const [showShop, setShowShop] = useState(false); // NEW FLAG
 
   // ⏰ Countdown target date
-  const targetDate = new Date("2025-10-03T10:00:00");
+  const targetDate = new Date("2025-10-04T10:00:00");
 
   useEffect(() => {
     const interval = setInterval(() => {
