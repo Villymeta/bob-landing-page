@@ -2,28 +2,90 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { jsPDF } from "jspdf";
-import QRCode from "qrcode";
+import jsPDF from "jspdf";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default function SuccessPage() {
   const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyWallet = async () => {
+    const wallet = "Bo9BCBonBbBHYDVJfeepem4jvz1RfVRracFz3jMxuMfZ";
+    try {
+      await navigator.clipboard.writeText(wallet);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy wallet:", err);
+    }
+  };
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("bob_last_order");
-      if (stored) {
-        setOrder(JSON.parse(stored));
-        localStorage.removeItem("bob_last_order"); // cleanup
+    const loadOrder = async () => {
+      try {
+        const stored = localStorage.getItem("bob_last_order");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.items?.length > 0) {
+            setOrder(parsed);
+            localStorage.removeItem("bob_last_order");
+            setLoading(false);
+            return;
+          }
+        }
+
+        // ✅ Fallback: fetch from Supabase
+        const { data, error } = await supabase
+          .from("orders")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (data) {
+          setOrder({
+            ...data,
+            customerName: data.customer_name || data.name,
+            customerEmail: data.customer_email || data.email,
+            customerWallet: data.wallet_address || data.wallet,
+            items: data.items || data.cart_items || [],
+          });
+        }
+      } catch (err) {
+        console.error("❌ Failed to load order", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("❌ Failed to load last order:", err);
-    }
+    };
+
+    loadOrder();
   }, []);
+
+  if (loading) {
+    return (
+      <section className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p>Loading your order...</p>
+      </section>
+    );
+  }
 
   if (!order) {
     return (
-      <section className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p>No recent order found.</p>
+      <section className="min-h-screen bg-black text-white flex items-center justify-center text-center px-4">
+        <p>
+          ⚠️ We couldn’t find your order details. Please check your email or
+          return to the{" "}
+          <Link href="/shop" className="text-yellow-400 underline">
+            Shop
+          </Link>.
+        </p>
       </section>
     );
   }
@@ -33,12 +95,9 @@ export default function SuccessPage() {
     0
   );
 
-  // 🟡 Generate Branded PDF Receipt
   const downloadReceipt = async () => {
     const doc = new jsPDF();
-
-    // Load logo from /public
-    const logoUrl = "/logo.png";
+    const logoUrl = "/BOBLOGO.png";
     const logo = await fetch(logoUrl)
       .then((res) => res.blob())
       .then(
@@ -50,68 +109,48 @@ export default function SuccessPage() {
           })
       );
 
-    // Insert logo
     doc.addImage(logo, "PNG", 85, 10, 40, 20);
 
-    // Brand colors
     const bobYellow = [255, 215, 0];
     const bobBlack = [0, 0, 0];
 
-    // Header
     doc.setFontSize(20);
     doc.setTextColor(...bobBlack);
     doc.setFont("helvetica", "bold");
-    doc.text("B.O.B SHOP", 105, 40, { align: "center" });
+    doc.text("The B.O.B Collection", 105, 40, { align: "center" });
 
     doc.setFontSize(12);
     doc.setTextColor(...bobYellow);
-    doc.text("Official Receipt", 105, 48, { align: "center" });
+    doc.text("Receipt", 105, 48, { align: "center" });
 
     doc.setDrawColor(...bobYellow);
     doc.line(20, 52, 190, 52);
 
     let y = 65;
-
-    // Customer Info
     doc.setFontSize(14);
     doc.setTextColor(...bobBlack);
-    doc.text("👤 Customer Information", 20, y);
+    doc.text("Customer Information", 20, y);
     y += 8;
     doc.setFontSize(12);
-    doc.text(`Name: ${order.customerName}`, 20, y);
+    doc.text(`Name: ${order.customerName || order.name || "Customer"}`, 20, y);
     y += 6;
-    doc.text(`Email: ${order.customerEmail}`, 20, y);
+    doc.text(`Email: ${order.customerEmail || "N/A"}`, 20, y);
     y += 6;
-    doc.text(`Wallet: ${order.customerWallet}`, 20, y);
+    doc.text(`Wallet: ${order.customerWallet || "N/A"}`, 20, y);
     y += 12;
 
-    // Transaction Info
     doc.setFontSize(14);
-    doc.text("🔗 Transaction", 20, y);
+    doc.text("Transaction", 20, y);
     y += 8;
     doc.setFontSize(12);
-    doc.text(`Reference: ${order.reference}`, 20, y);
-    y += 6;
+    doc.text(`Reference: ${order.reference || "N/A"}`, 20, y);
+    y += 10;
 
-    if (order.signature) {
-      doc.text(`Signature: ${order.signature}`, 20, y);
-      y += 12;
-
-      // 🟡 Generate QR code for Solana Explorer
-      const explorerUrl = `https://explorer.solana.com/tx/${order.signature}?cluster=devnet`;
-      const qrDataUrl = await QRCode.toDataURL(explorerUrl);
-      doc.addImage(qrDataUrl, "PNG", 150, y - 10, 40, 40);
-      y += 45;
-    } else {
-      y += 6;
-    }
-
-    // Order Summary
     doc.setFontSize(14);
-    doc.text("🧾 Order Summary", 20, y);
+    doc.text("Order Summary", 20, y);
     y += 8;
-
     doc.setFontSize(12);
+
     order.items.forEach((item) => {
       doc.text(
         `${item.qty}x ${item.name} ${
@@ -126,43 +165,48 @@ export default function SuccessPage() {
       y += 8;
     });
 
-    // Total
     y += 5;
-    doc.setDrawColor(...bobBlack);
     doc.line(20, y, 190, y);
     y += 10;
-
-    doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("TOTAL:", 20, y);
+    doc.text("Balance Due:", 20, y);
     doc.text(`$${subtotal.toFixed(2)}`, 170, y, { align: "right" });
-
-    // Footer
-    y += 20;
-    doc.setFontSize(10);
+    y += 8;
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(100);
+    doc.setFontSize(10);
     doc.text(
-      "Thank you for shopping with B.O.B! Follow us @BeaniesOnBusiness",
+      "Send to wallet: Bo9BCBonBbBHYDVJfeepem4jvz1RfVRracFz3jMxuMfZ",
       105,
       y,
       { align: "center" }
     );
 
-    // Save PDF
-    doc.save(`receipt-${order.reference}.pdf`);
+    y += 20;
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(
+      "Thank you for shopping with Beanies On Business!   Follow us @BeanieDaoX",
+      105,
+      y,
+      { align: "center" }
+    );
+
+    doc.save(`receipt-${order.reference || "order"}.pdf`);
   };
 
   return (
     <section className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-10">
-      <div className="bg-green-600 text-white rounded-2xl shadow-lg p-8 max-w-2xl w-full text-center">
-        <h1 className="text-3xl font-bold mb-4">✅ Payment Confirmed!</h1>
+      <div className="bg-[#f7e49b] text-black rounded-2xl shadow-lg p-8 max-w-2xl w-full text-center">
+        <h1 className="text-3xl font-bold mb-4">Order Confirmed!</h1>
         <p className="text-lg mb-6">
-          Thank you, <span className="font-semibold">{order.customerName}</span>!
-          Your order has been processed successfully.
+          Thank you,{" "}
+          <span className="font-semibold">
+            {order.customerName || order.name || "Valued Customer"}
+          </span>
+          ! Your order has been processed successfully.
         </p>
 
-        {/* Order Summary */}
+        {/* 🧾 Order Summary */}
         <div className="bg-white text-black rounded-xl shadow-md p-6 mb-6 text-left">
           <h2 className="text-xl font-bold mb-4">🧾 Order Summary</h2>
           {order.items.map((item, i) => (
@@ -185,36 +229,42 @@ export default function SuccessPage() {
           ))}
 
           <div className="flex justify-between border-t pt-3 font-bold">
-            <span>Total</span>
+            <span>Balance Due</span>
             <span>${subtotal.toFixed(2)}</span>
           </div>
         </div>
 
-        {/* Transaction Info */}
-        <div className="bg-black text-white rounded-lg p-4 mb-6 text-sm text-left">
-          <p>
-            <span className="font-semibold">Reference:</span> {order.reference}
+        {/* Wallet Section with Copy Button */}
+        <div className="flex flex-col items-center mt-4 border-t border-gray-400 pt-4">
+          <p className="text-sm text-gray-800 mb-1 font-semibold">
+            Send to wallet:
           </p>
-          {order.signature && (
-            <p>
-              <span className="font-semibold">Signature:</span>{" "}
-              <a
-                href={`https://explorer.solana.com/tx/${order.signature}?cluster=devnet`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-yellow-400 underline"
-              >
-                View on Solana Explorer
-              </a>
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+            <p className="bg-black text-[#f7e49b] font-mono text-xs sm:text-sm px-3 py-2 rounded-md break-all w-full max-w-xs sm:max-w-sm">
+              Bo9BCBonBbBHYDVJfeepem4jvz1RfVRracFz3jMxuMfZ
             </p>
-          )}
+            <button
+              onClick={handleCopyWallet}
+              className="bg-black text-[#f7e49b] font-semibold px-3 py-2 rounded hover:bg-gray-900 transition"
+            >
+              {copied ? " Copied!" : "📋 Copy"}
+            </button>
+          </div>
+        </div>
+
+        {/* Transaction Info */}
+        <div className="bg-black text-white rounded-lg p-4 mb-6 text-sm text-left mt-4">
+          <p>
+            <span className="font-semibold">Reference:</span>{" "}
+            {order.reference || "N/A"}
+          </p>
         </div>
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/shop"
-            className="bg-yellow-400 text-black font-bold px-6 py-3 rounded-xl hover:bg-yellow-500 transition"
+            className="bg-black text-[#f7e49b] font-bold px-6 py-3 rounded-xl hover:bg-gray-900 transition"
           >
             Continue Shopping
           </Link>
@@ -222,7 +272,7 @@ export default function SuccessPage() {
             onClick={downloadReceipt}
             className="bg-white text-black font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition"
           >
-            ⬇️ Download Receipt
+            Download Receipt
           </button>
         </div>
       </div>
