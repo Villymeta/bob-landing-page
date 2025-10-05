@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import jsPDF from "jspdf";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -95,105 +94,6 @@ export default function SuccessPage() {
     0
   );
 
-  const downloadReceipt = async () => {
-    const doc = new jsPDF();
-    const logoUrl = "/BOBLOGO.png";
-    const logo = await fetch(logoUrl)
-      .then((res) => res.blob())
-      .then(
-        (blob) =>
-          new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(blob);
-          })
-      );
-
-    doc.addImage(logo, "PNG", 85, 10, 40, 20);
-
-    const bobYellow = [255, 215, 0];
-    const bobBlack = [0, 0, 0];
-
-    doc.setFontSize(20);
-    doc.setTextColor(...bobBlack);
-    doc.setFont("helvetica", "bold");
-    doc.text("The B.O.B Collection", 105, 40, { align: "center" });
-
-    doc.setFontSize(12);
-    doc.setTextColor(...bobYellow);
-    doc.text("Receipt", 105, 48, { align: "center" });
-
-    doc.setDrawColor(...bobYellow);
-    doc.line(20, 52, 190, 52);
-
-    let y = 65;
-    doc.setFontSize(14);
-    doc.setTextColor(...bobBlack);
-    doc.text("Customer Information", 20, y);
-    y += 8;
-    doc.setFontSize(12);
-    doc.text(`Name: ${order.customerName || order.name || "Customer"}`, 20, y);
-    y += 6;
-    doc.text(`Email: ${order.customerEmail || "N/A"}`, 20, y);
-    y += 6;
-    doc.text(`Wallet: ${order.customerWallet || "N/A"}`, 20, y);
-    y += 12;
-
-    doc.setFontSize(14);
-    doc.text("Transaction", 20, y);
-    y += 8;
-    doc.setFontSize(12);
-    doc.text(`Reference: ${order.reference || "N/A"}`, 20, y);
-    y += 10;
-
-    doc.setFontSize(14);
-    doc.text("Order Summary", 20, y);
-    y += 8;
-    doc.setFontSize(12);
-
-    order.items.forEach((item) => {
-      doc.text(
-        `${item.qty}x ${item.name} ${
-          item.size ? `| Size: ${item.size}` : ""
-        } ${item.color ? `| Color: ${item.color}` : ""}`,
-        20,
-        y
-      );
-      doc.text(`$${(item.price * item.qty).toFixed(2)}`, 170, y, {
-        align: "right",
-      });
-      y += 8;
-    });
-
-    y += 5;
-    doc.line(20, y, 190, y);
-    y += 10;
-    doc.setFont("helvetica", "bold");
-    doc.text("Balance Due:", 20, y);
-    doc.text(`$${subtotal.toFixed(2)}`, 170, y, { align: "right" });
-    y += 8;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(
-      "Send to wallet: Bo9BCBonBbBHYDVJfeepem4jvz1RfVRracFz3jMxuMfZ",
-      105,
-      y,
-      { align: "center" }
-    );
-
-    y += 20;
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(
-      "Thank you for shopping with Beanies On Business!   Follow us @BeanieDaoX",
-      105,
-      y,
-      { align: "center" }
-    );
-
-    doc.save(`receipt-${order.reference || "order"}.pdf`);
-  };
-
   return (
     <section className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-10">
       <div className="bg-[#f7e49b] text-black rounded-2xl shadow-lg p-8 max-w-2xl w-full text-center">
@@ -260,20 +160,14 @@ export default function SuccessPage() {
           </p>
         </div>
 
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        {/* Only Continue Shopping button remains */}
+        <div className="flex justify-center">
           <Link
             href="/shop"
             className="bg-black text-[#f7e49b] font-bold px-6 py-3 rounded-xl hover:bg-gray-900 transition"
           >
             Continue Shopping
           </Link>
-          <button
-            onClick={downloadReceipt}
-            className="bg-white text-black font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition"
-          >
-            Download Receipt
-          </button>
         </div>
       </div>
     </section>
