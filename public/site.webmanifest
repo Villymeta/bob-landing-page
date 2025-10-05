@@ -1,0 +1,23 @@
+{
+    "name": "Beanies On Business",
+    "short_name": "BOB",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#FFD700",
+    "description": "Official B.O.B site – community, merch, and DAO hub",
+    "icons": [
+      {
+        "src": "/favicon-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any maskable"
+      },
+      {
+        "src": "/favicon-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "any maskable"
+      }
+    ]
+  }
