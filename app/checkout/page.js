@@ -1,59 +1,58 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useCart } from "../../context/CartContext";
+import Script from "next/script";
 import { useRouter } from "next/navigation";
-import QRCode from "react-qr-code";
+import { useBag } from "@/context/BagContext";
+
+const MERCHANT_WALLET = "Bo9BCBonBbBHYDVJfeepem4jvz1RfVRracFz3jMxuMfZ";
 
 export default function CheckoutPage() {
-  const { cart, clearCart } = useCart();
   const router = useRouter();
+  const autocompleteRef = useRef(null);
+  const { bag, subtotal, clearBag } = useBag();
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    walletAddress: "",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
+    deliveryMethod: "pickup",
+  });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const shippingFee = formData.deliveryMethod === "ship" ? 10 : 0;
+  const total = subtotal + shippingFee;
 
-  // Customer info
-  const [customerName, setCustomerName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerWallet, setCustomerWallet] = useState("");
+  const handleChange = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
-  // Shipping info
-  const [street, setStreet] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zip, setZip] = useState("");
-  const [country, setCountry] = useState("");
-
-  // Payment state
-  const [paymentUrl, setPaymentUrl] = useState(null);
-  const [reference, setReference] = useState(null);
-  const [signature, setSignature] = useState(null);
-
-  const autocompleteRef = useRef(null);
-
-  // 💳 subtotal
-  const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
-
-  // 🗺️ Google Places Autocomplete init
+  // ✅ Google Maps Autocomplete
   useEffect(() => {
-    if (!window.google || !window.google.maps || !window.google.maps.places) {
-      return;
-    }
+    if (formData.deliveryMethod !== "ship") return;
 
-    const autocomplete = new window.google.maps.places.Autocomplete(
-      autocompleteRef.current,
-      { types: ["address"] }
-    );
+    const input = autocompleteRef.current;
+    if (!input || !(input instanceof HTMLInputElement)) return;
+    if (!window.google?.maps?.places) return;
 
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (!place.address_components) return;
+    const ac = new window.google.maps.places.Autocomplete(input, {
+      fields: ["address_components", "formatted_address"],
+    });
 
-      let streetVal = "";
-      let cityVal = "";
-      let stateVal = "";
-      let zipVal = "";
-      let countryVal = "";
+    const listener = ac.addListener("place_changed", () => {
+      const place = ac.getPlace();
+      if (!place?.address_components) return;
+
+      let streetVal = "",
+        cityVal = "",
+        stateVal = "",
+        zipVal = "",
+        countryVal = "";
 
       place.address_components.forEach((comp) => {
         const types = comp.types;
@@ -65,241 +64,170 @@ export default function CheckoutPage() {
         if (types.includes("country")) countryVal = comp.long_name;
       });
 
-      setStreet(streetVal);
-      setCity(cityVal);
-      setState(stateVal);
-      setZip(zipVal);
-      setCountry(countryVal);
+      setFormData((prev) => ({
+        ...prev,
+        address: streetVal,
+        city: cityVal,
+        state: stateVal,
+        zip: zipVal,
+        country: countryVal,
+      }));
     });
-  }, []);
 
-  const handleCheckout = async () => {
+    return () => listener.remove();
+  }, [formData.deliveryMethod]);
+
+  // ✅ Unified Checkout Handler (connects to /api/checkout)
+  const handleCheckout = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
     try {
-      setLoading(true);
-      setError(null);
+      if (bag.length === 0) throw new Error("Your bag is empty.");
 
-      if (!customerName || !customerEmail || !customerWallet || !street || !city || !state || !zip || !country) {
-        throw new Error("Please fill out all customer & shipping details before checkout.");
-      }
+      const customer = {
+        name: formData.name,
+        email: formData.email,
+        wallet: formData.walletAddress,
+      };
 
-      // 1️⃣ Create Solana Pay session
-      const res = await fetch("/api/create-payment", {
+      const items = bag.map((item) => ({
+        id: item.id,
+        name: item.name,
+        size: item.size,
+        color: item.color,
+        qty: item.qty,
+        price: item.price,
+      }));
+
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productName: "BOB Order",
-          priceUsd: subtotal,
-          items: cart,
-          customer: {
-            name: customerName,
-            email: customerEmail,
-            wallet: customerWallet,
-            address: { street, city, state, zip, country },
-          },
-        }),
+        body: JSON.stringify({ customer, items }),
       });
 
       const data = await res.json();
-      if (!res.ok || !data.url || !data.reference) {
-        throw new Error(data.error || "Failed to create payment");
+
+      if (data.success) {
+        alert("✅ Order submitted! Please send payment to the wallet below.");
+
+        localStorage.setItem(
+          "bob_last_order",
+          JSON.stringify({
+            reference: data.reference,
+            customerName: formData.name,
+            customerEmail: formData.email,
+            customerWallet: formData.walletAddress,
+            items: bag,
+            total,
+            deliveryMethod: formData.deliveryMethod,
+          })
+        );
+
+        clearBag();
+        router.push(`/checkout/success?ref=${data.reference}`);
+      } else {
+        throw new Error(data.error || "Order submission failed.");
       }
-
-      setPaymentUrl(data.url);
-      setReference(data.reference);
-
-      // 2️⃣ Start polling verify-payment
-      const interval = setInterval(async () => {
-        try {
-          const verifyRes = await fetch("/api/verify-payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reference: data.reference }),
-          });
-
-          const verify = await verifyRes.json();
-
-          if (verify.ok) {
-            clearInterval(interval);
-            setSignature(verify.signature);
-
-            // 3️⃣ Update Google Sheets (send shipping too)
-            await fetch("/api/update-stock", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                items: cart,
-                reference: data.reference,
-                signature: verify.signature || "N/A",
-                customer: {
-                  name: customerName,
-                  email: customerEmail,
-                  wallet: customerWallet,
-                  address: { street, city, state, zip, country },
-                },
-              }),
-            });
-
-            // 4️⃣ Save last order
-            localStorage.setItem(
-              "bob_last_order",
-              JSON.stringify({
-                items: cart,
-                customerName,
-                customerEmail,
-                customerWallet,
-                reference: data.reference,
-                signature: verify.signature,
-                address: { street, city, state, zip, country },
-              })
-            );
-
-            // 5️⃣ Clear cart & redirect
-            clearCart();
-            router.push("/checkout/success");
-          }
-        } catch {
-          console.log("⏳ Waiting for payment...");
-        }
-      }, 5000);
     } catch (err) {
-      setError(err.message);
+      alert("❌ Error submitting order: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // ------------------------
-  // UI
-  // ------------------------
-
-  if (paymentUrl) {
-    return (
-      <section className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-10">
-        <h1 className="text-3xl font-bold mb-6">Scan to Pay</h1>
-        <div className="bg-white p-4 rounded-xl mb-6">
-          <QRCode value={paymentUrl} size={220} />
-        </div>
-        <p className="text-sm text-gray-400 mb-2">
-          Reference: <span className="break-all">{reference}</span>
-        </p>
-        {!signature ? (
-          <p className="text-yellow-400">⏳ Waiting for payment confirmation…</p>
-        ) : (
-          <p className="text-green-400">✅ Payment confirmed!</p>
-        )}
-      </section>
-    );
-  }
-
   return (
-    <section className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-10">
-      <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+    <>
+      <Script
+        id="google-maps"
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+        strategy="afterInteractive"
+      />
 
-      <div className="bg-white text-black rounded-2xl shadow-lg p-6 w-full max-w-lg">
-        {/* Customer Info */}
-        <label className="block text-sm font-bold mb-2">Name</label>
-        <input
-          type="text"
-          value={customerName}
-          onChange={(e) => setCustomerName(e.target.value)}
-          className="w-full px-4 py-2 border rounded-lg mb-4"
-          placeholder="Your full name"
-        />
+      <div className="min-h-screen bg-black text-white flex flex-col items-center py-12">
+        <h1 className="text-3xl font-bold mb-6">Checkout</h1>
 
-        <label className="block text-sm font-bold mb-2">Email</label>
-        <input
-          type="email"
-          value={customerEmail}
-          onChange={(e) => setCustomerEmail(e.target.value)}
-          className="w-full px-4 py-2 border rounded-lg mb-4"
-          placeholder="you@example.com"
-        />
+        <form onSubmit={handleCheckout} className="bg-[#f7e49b] p-6 rounded-lg w-full max-w-md text-black">
+          <input
+            name="name"
+            placeholder="Full Name"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full mb-3 p-2 rounded"
+            required
+          />
+          <input
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full mb-3 p-2 rounded"
+            required
+          />
+          <input
+            name="walletAddress"
+            placeholder="Your Wallet Address"
+            value={formData.walletAddress}
+            onChange={handleChange}
+            className="w-full mb-3 p-2 rounded"
+            required
+          />
 
-        <label className="block text-sm font-bold mb-2">Wallet Address</label>
-        <input
-          type="text"
-          value={customerWallet}
-          onChange={(e) => setCustomerWallet(e.target.value)}
-          className="w-full px-4 py-2 border rounded-lg mb-4"
-          placeholder="Your Solana wallet address"
-        />
-
-       {/* Shipping Info with Google Autocomplete */}
-<label className="block text-sm font-bold mb-2">Street Address</label>
-<input
-  ref={autocompleteRef}
-  type="text"
-  value={street}
-  onChange={(e) => setStreet(e.target.value)}
-  className="w-full px-4 py-2 border rounded-lg mb-4"
-  placeholder="123 Main St"
-/>
-
-<label className="block text-sm font-bold mb-2">City</label>
-<input
-  type="text"
-  value={city}
-  onChange={(e) => setCity(e.target.value)}
-  className="w-full px-4 py-2 border rounded-lg mb-4"
-/>
-
-<label className="block text-sm font-bold mb-2">State</label>
-<input
-  type="text"
-  value={state}
-  onChange={(e) => setState(e.target.value)}
-  className="w-full px-4 py-2 border rounded-lg mb-4"
-/>
-
-<label className="block text-sm font-bold mb-2">ZIP Code</label>
-<input
-  type="text"
-  value={zip}
-  onChange={(e) => setZip(e.target.value)}
-  className="w-full px-4 py-2 border rounded-lg mb-4"
-/>
-
-<label className="block text-sm font-bold mb-2">Country</label>
-<input
-  type="text"
-  value={country}
-  onChange={(e) => setCountry(e.target.value)}
-  className="w-full px-4 py-2 border rounded-lg mb-4"
-/>
-        {/* Cart Summary */}
-        {cart.map((item, i) => (
-          <div
-            key={`${item.id}-${item.size}-${item.color}-${i}`}
-            className="flex justify-between items-center mb-4"
+          <select
+            name="deliveryMethod"
+            value={formData.deliveryMethod}
+            onChange={handleChange}
+            className="w-full mb-3 p-2 rounded"
           >
-            <div>
-              <p className="font-semibold">{item.name}</p>
-              <p className="text-sm text-gray-500">
-                {item.qty} × ${item.price}{" "}
-                {item.size && `| Size: ${item.size}`}{" "}
-                {item.color && `| Color: ${item.color}`}
+            <option value="pickup">Pickup (DDLV)</option>
+            <option value="ship">Ship (+$10)</option>
+          </select>
+
+          {formData.deliveryMethod === "ship" && (
+            <>
+              <input
+                ref={autocompleteRef}
+                name="address"
+                placeholder="Street Address"
+                value={formData.address}
+                onChange={handleChange}
+                className="w-full mb-3 p-2 rounded"
+                required
+              />
+              <input name="city" placeholder="City" value={formData.city} onChange={handleChange} className="w-full mb-3 p-2 rounded" required />
+              <input name="state" placeholder="State" value={formData.state} onChange={handleChange} className="w-full mb-3 p-2 rounded" required />
+              <input name="zip" placeholder="ZIP Code" value={formData.zip} onChange={handleChange} className="w-full mb-3 p-2 rounded" required />
+              <input name="country" placeholder="Country" value={formData.country} onChange={handleChange} className="w-full mb-3 p-2 rounded" required />
+            </>
+          )}
+
+          <div className="mt-4">
+            <h3 className="font-semibold mb-2">Order Summary:</h3>
+            {bag.map((item, i) => (
+              <p key={i}>
+                {item.qty} × {item.name} ({item.size}) — ${item.price}
               </p>
-            </div>
-            <p className="font-semibold">${(item.price * item.qty).toFixed(2)}</p>
+            ))}
+            {shippingFee > 0 && <p>Shipping: ${shippingFee}</p>}
+            <p className="font-bold mt-2">Total: ${total.toFixed(2)}</p>
           </div>
-        ))}
 
-        <div className="flex justify-between items-center border-t pt-4 font-bold">
-          <span>Total</span>
-          <span>${subtotal.toFixed(2)}</span>
-        </div>
+          <div className="mt-6">
+            <p className="text-center text-sm text-gray-800 mb-2">Send payment manually to:</p>
+            <div className="bg-black text-[#f7e49b] text-center p-2 rounded font-mono break-all">
+              {MERCHANT_WALLET}
+            </div>
+          </div>
 
-        {/* Checkout Button */}
-        <button
-          onClick={handleCheckout}
-          disabled={loading}
-          className="mt-6 w-full bg-yellow-400 text-black px-6 py-3 rounded-xl font-bold hover:bg-yellow-500 transition disabled:bg-gray-400"
-        >
-          {loading ? "Processing…" : "Pay with Solana Pay"}
-        </button>
-
-        {error && <p className="text-red-500 mt-4 text-center">⚠️ {error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-6 bg-black text-[#f7e49b] font-bold py-2 rounded hover:bg-gray-900 transition disabled:bg-gray-700"
+          >
+            {loading ? "Processing…" : "Submit Order"}
+          </button>
+        </form>
       </div>
-    </section>
+    </>
   );
 }
