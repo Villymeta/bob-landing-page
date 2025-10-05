@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional custom styles below */
+
+/* Theme variables */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+/* Body styles */
+body {
+  font-family: 'Inter', sans-serif;
+  @apply bg-black text-bobyellow;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  @apply text-yellow-400;
+}
+
+@keyframes slide-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+/* 🔥 Solana Wallet Modal Overrides */
+
+/* Modal background */
+.wallet-adapter-modal {
+  background-color: #000 !important; /* black */
+  color: #facc15 !important;        /* bobyellow */
+  border: 2px solid #facc15 !important;
+  border-radius: 1rem !important;
+}
+
+/* Buttons inside modal */
+.wallet-adapter-button {
+  background-color: #facc15 !important; /* yellow */
+  color: #000 !important;              /* black text */
+  font-weight: 600 !important;
+  border-radius: 9999px !important;    /* rounded-full */
+  padding: 0.75rem 1.5rem !important;
+  transition: background-color 0.2s ease;
+}
+
+.wallet-adapter-button:hover {
+  background-color: #eab308 !important; /* darker yellow */
+  color: #000 !important;
+}
+
+/* Wallet list items */
+.wallet-adapter-modal-list .wallet-adapter-button {
+  background-color: #111 !important;   /* dark gray background */
+  color: #facc15 !important;          /* yellow text */
+  border: 1px solid #facc15 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  background-color: #facc15 !important;
+  color: #000 !important;
+}
+
+/* Close button */
+.wallet-adapter-modal-button-close {
+  color: #facc15 !important;
+  font-size: 1.25rem !important;
+}
+
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px #FFD700) drop-shadow(0 0 15px #FFD700) drop-shadow(0 0 30px #FFA500);
+  }
+  20%, 24%, 55% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 3px #FFD700);
+  }
+}
